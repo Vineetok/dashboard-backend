@@ -1,7 +1,7 @@
 export const searchFunds = async (req, res) => {
     try {
         const { q } = req.query;
-        // Allow empty query for initial load/explore
+
         const results = await mfApiService.searchFunds(q || '');
         res.json(results);
     } catch (error) {
