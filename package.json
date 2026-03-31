@@ -1,0 +1,50 @@
+{
+  "name": "dashboard-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/infinity-software-dev/dashboard-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/infinity-software-dev/dashboard-backend/issues"
+  },
+  "homepage": "https://github.com/infinity-software-dev/dashboard-backend#readme",
+  "dependencies": {
+    "aws-sdk": "^2.1693.0",
+    "axios": "^1.13.5",
+    "bcrypt": "^6.0.0",
+    "cheerio": "^1.2.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.6",
+    "crypto": "^1.0.1",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.3.1",
+    "json2csv": "^6.0.0-alpha.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "multer-s3": "^3.0.1",
+    "node-cron": "^4.2.1",
+    "pg": "^8.16.3",
+    "puppeteer": "^24.38.0",
+    "resend": "^6.4.2",
+    "rss-parser": "^3.13.0",
+    "sharp": "^0.34.5",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
