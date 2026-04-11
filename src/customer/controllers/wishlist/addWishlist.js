@@ -1,4 +1,5 @@
 import pool from '../../../config/db.js';
+import * as mfApiService from '../../../services/mfApiService.js';
 
 export const addWishlist = async (req, res) => {
   try {
@@ -9,6 +10,7 @@ export const addWishlist = async (req, res) => {
       product_id
     } = req.body;
 
+    // ✅ Check if already exists
     const existing = await pool.query(
       `
       SELECT * FROM tbl_wishlist
@@ -26,6 +28,9 @@ export const addWishlist = async (req, res) => {
 
     let product = null;
 
+    // ===========================
+    // ✅ UNLISTED SHARE
+    // ===========================
     if (product_type === "unlisted_share") {
       const share = await pool.query(
         `
@@ -37,8 +42,50 @@ export const addWishlist = async (req, res) => {
       );
 
       product = share.rows[0];
+
+      if (product) {
+        product.product_name = product.shares_name;
+      }
     }
 
+    // ===========================
+    // ✅ MUTUAL FUND (FIXED)
+    // ===========================
+    else if (product_type === "mutual_fund") {
+      const details = await mfApiService.getFullFundDetails(product_id);
+
+      // ❌ If API fails or invalid
+      if (!details || !details.meta) {
+        return res.status(404).json({
+          success: false,
+          message: "Mutual fund not found"
+        });
+      }
+
+      const latestNav = details.data?.[0];
+
+      // ✅ Normalize structure (IMPORTANT)
+      product = {
+        product_name: details.meta.scheme_name,
+        scheme_code: product_id,
+
+        nav: latestNav?.nav || null,
+        nav_date: latestNav?.date || null,
+
+        fund_house: details.meta.fund_house || null,
+        scheme_type: details.meta.scheme_type || null,
+        scheme_category: details.meta.scheme_category || null,
+
+        category: details.meta.category,
+        type: details.meta.type,
+        risk: details.meta.risk,
+        riskWidth: details.meta.riskWidth
+      };
+    }
+
+    // ===========================
+    // ❌ PRODUCT NOT FOUND
+    // ===========================
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -46,6 +93,9 @@ export const addWishlist = async (req, res) => {
       });
     }
 
+    // ===========================
+    // ✅ INSERT INTO DB
+    // ===========================
     const result = await pool.query(
       `
       INSERT INTO tbl_wishlist
@@ -63,8 +113,8 @@ export const addWishlist = async (req, res) => {
         user_id,
         product_type,
         product_id,
-        product.shares_name,
-        product
+        product.product_name,
+        JSON.stringify(product)
       ]
     );
 

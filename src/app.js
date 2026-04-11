@@ -24,6 +24,7 @@ app.use(
     origin: [
       'http://localhost:3000',
       'http://192.168.1.83:3000',
+      "http://192.168.1.69:3000",
       'https://www.infinityarthvishva.com',
       'https://infinityarthvishva.com',
     ],

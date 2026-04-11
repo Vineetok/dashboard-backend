@@ -2,8 +2,8 @@ import axios from 'axios';
 import * as fundClassifier from '../utils/fundClassifier.js';
 
 
-const AMFI_URL = 'https://www.amfiindia.com/spages/NAVAll.txt';
-const MFAPI_BASE = 'https://api.mfapi.in';
+const AMFI_URL = process.env.AMFI_DATA_URL || 'https://www.amfiindia.com/spages/NAVAll.txt';
+const MF_BASE_URL = process.env.MF_BASE_URL || 'https://api.mfapi.in';
 const AMFI_CACHE_MS = 60 * 60 * 1000; // 1 hour
 const MF_DETAILS_CACHE_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -104,7 +104,7 @@ export async function getFullFundDetails(schemeCode) {
     }
 
     try {
-        const response = await axios.get(`${MFAPI_BASE}/mf/${schemeCode}`, { timeout: 20000 });
+        const response = await axios.get(`${MF_BASE_URL}/mf/${schemeCode}`, { timeout: 20000 });
         const data = response.data;
 
         if (data && data.meta) {
@@ -148,4 +148,25 @@ export async function getFullFundDetails(schemeCode) {
 export async function getTopPerformingFunds() {
     const results = await searchFunds('Bluechip');
     return results.slice(0, 4);
+}
+
+/**
+ * Fetches the latest NAV for a given scheme code.
+ */
+export async function getNav(schemeCode) {
+    try {
+        const response = await axios.get(`${MF_BASE_URL}/mf/${schemeCode}/latest`, { timeout: 10000 });
+        const data = response.data;
+
+        // mfapi.in /latest returns { meta: {...}, data: [{ date, nav }] }
+        const latest = Array.isArray(data?.data) ? data.data[0] : null;
+
+        return {
+            nav: latest?.nav ?? null,
+            date: latest?.date ?? null,
+        };
+    } catch (error) {
+        console.error(`Error fetching NAV for scheme ${schemeCode}:`, error.message);
+        return null;
+    }
 }
