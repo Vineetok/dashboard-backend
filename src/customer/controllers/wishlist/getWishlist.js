@@ -34,51 +34,35 @@ export const getWishlist = async (req, res) => {
           : item.product_data
     }));
 
-    // ===========================
-    // ✅ STEP 2: Get MF items
-    // ===========================
-    const mfItems = wishlist.filter(
-      item => item.product_type === "mutual_fund"
-    );
+
 
     // ===========================
-    // ✅ STEP 3: Fetch latest NAV
+    // ✅ STEP 3: Fetch latest NAV & Sync DB
     // ===========================
-    const navMap = {};
-
     await Promise.all(
-      mfItems.map(async (item) => {
-        try {
-          const data = await mfApiService.getNav(item.product_id);
+      wishlist.map(async (item) => {
+        if (item.product_type !== "mutual_fund") return;
 
-          navMap[item.product_id] = {
-            nav: data?.nav,
-            date: data?.date
-          };
+        try {
+          const freshData = await mfApiService.getNav(item.product_id);
+
+          if (freshData && freshData.nav) {
+            // Update in-memory item for immediate response
+            item.product_data.nav = freshData.nav;
+            item.product_data.nav_date = freshData.date;
+            item.product_data.is_fallback = false;
+
+            // ✅ Async DB Update (Don't await if you want max performance, but here we await inside Promise.all)
+            await pool.query(
+              `UPDATE tbl_wishlist SET product_data = $1 WHERE id = $2`,
+              [JSON.stringify(item.product_data), item.id]
+            );
+          }
         } catch (err) {
-          console.error("NAV fetch failed:", item.product_id);
+          console.error(`Lazy update failed for ${item.product_id}:`, err.message);
         }
       })
     );
-
-    // ===========================
-    // ✅ STEP 4: Merge NAV into wishlist
-    // ===========================
-    wishlist = wishlist.map(item => {
-      if (item.product_type === "mutual_fund") {
-        const fresh = navMap[item.product_id];
-
-        return {
-          ...item,
-          product_data: {
-            ...item.product_data,
-            nav: fresh?.nav || item.product_data.nav,
-            nav_date: fresh?.date || item.product_data.nav_date
-          }
-        };
-      }
-      return item;
-    });
 
     // ===========================
     // ✅ RESPONSE

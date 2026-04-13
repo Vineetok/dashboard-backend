@@ -7,8 +7,11 @@ export const addWishlist = async (req, res) => {
 
     const {
       product_type,
-      product_id
+      product_id,
+      product_name
     } = req.body;
+
+    console.log("Wishlist Add Request - Type:", product_type, "ID:", product_id, "Name:", product_name);
 
     // ✅ Check if already exists
     const existing = await pool.query(
@@ -49,37 +52,18 @@ export const addWishlist = async (req, res) => {
     }
 
     // ===========================
-    // ✅ MUTUAL FUND (FIXED)
+    // ✅ MUTUAL FUND (NO EXTERNAL API)
     // ===========================
     else if (product_type === "mutual_fund") {
-      const details = await mfApiService.getFullFundDetails(product_id);
+      const { nav, risk } = req.body;
 
-      // ❌ If API fails or invalid
-      if (!details || !details.meta) {
-        return res.status(404).json({
-          success: false,
-          message: "Mutual fund not found"
-        });
-      }
-
-      const latestNav = details.data?.[0];
-
-      // ✅ Normalize structure (IMPORTANT)
+      // ✅ Store minimal data (NO API CALL)
       product = {
-        product_name: details.meta.scheme_name,
+        product_name: product_name || "Mutual Fund",
         scheme_code: product_id,
-
-        nav: latestNav?.nav || null,
-        nav_date: latestNav?.date || null,
-
-        fund_house: details.meta.fund_house || null,
-        scheme_type: details.meta.scheme_type || null,
-        scheme_category: details.meta.scheme_category || null,
-
-        category: details.meta.category,
-        type: details.meta.type,
-        risk: details.meta.risk,
-        riskWidth: details.meta.riskWidth
+        nav: nav || null,
+        risk: risk || null,
+        is_fallback: true
       };
     }
 
