@@ -26,14 +26,14 @@ export const getOverallReports = async (req, res) => {
       `
       SELECT
         t.share_id,
-        s.company_name,
+        s.shares_name,
         SUM(t.quantity) AS quantity,
         s.price AS current_price,
         SUM(t.quantity * s.price) AS holding_value
       FROM tbl_unlisted_transactions t
       JOIN tbl_shares s ON t.share_id = s.id
       WHERE t.user_id = $1
-      GROUP BY t.share_id, s.company_name, s.price
+      GROUP BY t.share_id, s.shares_name, s.price
       ORDER BY holding_value DESC
       `,
       [userId]

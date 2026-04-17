@@ -1,5 +1,4 @@
 import pool from '../../../config/db.js';
-import * as mfApiService from '../../../services/mfApiService.js';
 
 export const addWishlist = async (req, res) => {
   try {
@@ -63,6 +62,50 @@ export const addWishlist = async (req, res) => {
         scheme_code: product_id,
         nav: nav || null,
         risk: risk || null,
+        is_fallback: true
+      };
+    }
+
+    // ===========================
+    // ✅ REAL ESTATE (NO EXTERNAL API)
+    // ===========================
+    else if (product_type === "real_estate") {
+      const { price, location, yield_percentage, image } = req.body;
+
+      product = {
+        product_name: product_name || "Real Estate",
+        price: price || null,
+        location: location || null,
+        yield: yield_percentage || null,
+        logo_url: image || null,
+        is_fallback: true
+      };
+    }
+
+    // ===========================
+    // ✅ PMS (NO EXTERNAL API)
+    // ===========================
+    else if (product_type === "pms") {
+      const { risk, horizon } = req.body;
+
+      product = {
+        product_name: product_name || "PMS",
+        risk: risk || null,
+        tenure: horizon || null, // Mapping horizon to tenure for consistency on wishlist page
+        is_fallback: true
+      };
+    }
+
+    // ===========================
+    // ✅ AIF (NO EXTERNAL API)
+    // ===========================
+    else if (product_type === "aif") {
+      const { category, theme } = req.body;
+
+      product = {
+        product_name: product_name || "AIF",
+        category: category || null,
+        theme: theme || null,
         is_fallback: true
       };
     }

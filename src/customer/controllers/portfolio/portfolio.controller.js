@@ -36,26 +36,41 @@ const mainPortfolio = async (req, res) => {
 
     const { rows } = await pool.query(query, [userId]);
 
+    // Mutual fund holdings for the customer portfolio
+    const mfQuery = `
+      SELECT
+        scheme_code,
+        fund_name,
+        SUM(units) AS total_units,
+        AVG(nav_at_investment) AS nav,
+        SUM(amount) AS invested_value
+      FROM tbl_mutual_fund_investments
+      WHERE user_id = $1
+      GROUP BY scheme_code, fund_name
+      ORDER BY invested_value DESC;
+    `;
+    const { rows: mfRows } = await pool.query(mfQuery, [userId]);
+
     let totalInvestment = 0;
     let currentValue = 0;
 
     const holdings = rows.map(item => {
       const quantity = Number(item.total_quantity);
       const price = Number(item.price);
-      const investment = Number(item.invested_value);
-      const currentVal = quantity * price;
+      const invested_value = Number(item.invested_value);
+      const current_value = quantity * price;
 
-      totalInvestment += investment;
-      currentValue += currentVal;
+      totalInvestment += invested_value;
+      currentValue += current_value;
 
       return {
-        shareId: item.share_id,
-        companyName: item.company_name,
-        quantity,
+        share_id: item.share_id,
+        company_name: item.company_name,
+        total_quantity: quantity,
         price,
-        investment,
-        currentValue: currentVal,
-        returns: currentVal - investment
+        invested_value,
+        current_value,
+        returns: current_value - invested_value
       };
     });
 
@@ -66,7 +81,35 @@ const mainPortfolio = async (req, res) => {
       holdings
     };
 
-    const mutualFunds = null;
+    let mfTotalInvestment = 0;
+    let mfCurrentValue = 0;
+
+    const mfHoldings = mfRows.map(item => {
+      const units = Number(item.total_units);
+      const nav = Number(item.nav) || 0;
+      const invested_value = Number(item.invested_value);
+      const current_value = units * nav;
+
+      mfTotalInvestment += invested_value;
+      mfCurrentValue += current_value;
+
+      return {
+        scheme_code: item.scheme_code,
+        fund_name: item.fund_name,
+        units,
+        nav,
+        invested_value,
+        current_value
+      };
+    });
+
+    const mutualFunds = {
+      totalInvestment: mfTotalInvestment,
+      currentValue: mfCurrentValue,
+      returns: mfCurrentValue - mfTotalInvestment,
+      holdings: mfHoldings
+    };
+
     const loans = null;
     const insurance = null;
 

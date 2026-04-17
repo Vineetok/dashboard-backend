@@ -11,7 +11,7 @@ export const getRecentInvestments = async (req, res) => {
         'UNLISTED' AS type,
         t.id AS transaction_id,
         t.share_id AS product_id,
-        s.company_name AS name,
+        s.shares_name AS name,
         t.quantity,
         s.price,
         (t.quantity * s.price) AS total_amount,
@@ -36,7 +36,7 @@ export const getRecentInvestments = async (req, res) => {
         nav_at_investment AS price,
         amount AS total_amount,
         'COMPLETED' AS status,
-        created_at AS createdat
+        createdAt AS createdat
       FROM tbl_mutual_fund_investments
       WHERE user_id = $1
       `,

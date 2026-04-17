@@ -10,14 +10,14 @@ export const getPortfolioDistribution = async (req, res) => {
       SELECT
         'UNLISTED' AS type,
         t.share_id AS id,
-        s.company_name AS name,
+        s.shares_name AS name,
         SUM(t.quantity) AS total_quantity,
         s.price AS current_price,
         SUM(t.quantity * s.price) AS total_value
       FROM tbl_unlisted_transactions t
       JOIN tbl_shares s ON t.share_id = s.id
       WHERE t.user_id = $1
-      GROUP BY t.share_id, s.company_name, s.price
+      GROUP BY t.share_id, s.shares_name, s.price
       `,
       [userId]
     );
